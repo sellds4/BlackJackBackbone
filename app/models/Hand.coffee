@@ -4,7 +4,30 @@ class window.Hand extends Backbone.Collection
 
   initialize: (array, @deck, @isDealer) ->
 
-  hit: -> @add(@deck.pop()).last()
+  replay: -> @trigger 'replay'
+
+  hit: -> 
+    @add(@deck.pop()).last()
+    if @scores()[0] > 21
+      @bust()
+
+  blackjack: ->
+    if @scores()[0] == 21
+      @trigger 'blackjack'
+      # $('.stand-button').hide()
+      # $('.hit-button').hide()
+
+  bust: -> @trigger 'bust'
+
+  stand: -> 
+    @trigger 'stand'
+    (@get 'dealerHand').blackjack()
+
+  lose: -> @trigger 'lose'
+
+  win: -> @trigger 'win'
+
+  tie: -> @trigger 'tie'
 
   scores: ->
     # The scores are an array of potential scores.
@@ -16,4 +39,4 @@ class window.Hand extends Backbone.Collection
     score = @reduce (score, card) ->
       score + if card.get 'revealed' then card.get 'value' else 0
     , 0
-    if hasAce then [score, score + 10] else [score]
+    if hasAce and (score + 10 <= 21) then [score + 10] else [score]
